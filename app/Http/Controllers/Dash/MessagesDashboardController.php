@@ -1,81 +1,61 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
-use App\Models\User;
-use App\Models\Chat;
 use App\Models\Message;
-use Illuminate\Support\Facades\File;
+use App\Models\Chat;
 
-class SupportChatController extends Controller
-{    
-    public function handleSupport(Request $request)
+class MessagesDashboardController extends Controller
+{
+     public function handleMessages(Request $request,$id = null)
     {
         switch ($request->method()) {
             case 'GET':
-                return $this->getMessages($request);
+                return $this->getMessages($request,$id);
             case 'POST':
-                return $this->sendMessage($request);
-            case 'PUT':
-                return $this->sendFile($request);
+                return $this->sendMessage($request,$id);
             default:
-                return response()->json(['status' => false, 'message' => 'Invalid request method'], 405);
+                return response()->json(['status' => false, 'message' => 'Invalid request method']);
         }
     }
-    public function getMessages(Request $request)
+    
+    protected function getMessages(Request $request,$id)
     {
-        try {
-            $user = Auth::guard('sanctum')->user();
-            if (!$user) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'User not authenticated',
-                ], 401);
-            }
-            $chat = Chat::where('user_id', $user->id)->firstOrCreate([
-                'admin_id' => User::where('id', 3)->first()->id ?? null,
-                'user_id' => $user->id
-            ]);
-            $messages = Message::where('chat_id', $chat->id)->orderBy('created_at', 'desc')->get();
-            foreach ($messages as $message) {
-                if (is_null($message->readed_at) && $message->user_id != $user->id) {
+        $chat = Chat::where('id', $id)->first();
+        if (!$id) {
+           return response()->json([
+               'status' => false,
+               'error' => 'chat_id is required'
+           ], 400);
+        }
+        $messages = Message::where('chat_id', $id)->orderBy('created_at', 'desc') ->get();
+        foreach ($messages as $message) {
+                if (is_null($message->readed_at) && $message->user_id === $chat->user_id) {
                     $message->readed_at = now();
                     $message->save();
                 }
-            }
-            return response()->json([
-                'status' => true,
-                'messages' => $messages,
-            ], 200);
-    
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => false,
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+            }   
+       return response()->json([
+           'status' => true,
+           'messages' => $messages
+       ]);
     }
-    public function sendMessage(Request $request)
+    
+    protected function sendMessage(Request $request,$id)
     {
         $user = Auth::guard('sanctum')->user();
-        if (!$user) {
+        if (!Auth::guard('sanctum')->check()) {
             return response()->json([
                 'status' => false,
-                'message' => 'User not authenticated',
+                'message' => 'User not authenticated'
             ], 401);
         }
-        $chat = Chat::where('user_id', $user->id)->first();
-        if (!$chat) {
-            $chat = Chat::create([
-                'admin_id' => User::where('id', 3)->first()->id ?? null,
-                'user_id' => $user->id
-            ]);
-        }
-        if ($request->hasFile('message')) {
+        $chat = Chat::where('id', $id)->first();
+       if ($request->hasFile('message')) {
             $file = $request->file('message');
             if ($file->isValid()) {
                 $name = strtolower(Str::random(10)) . '-' . str_replace([' ', '_'], '-', $file->getClientOriginalName());
@@ -114,12 +94,10 @@ class SupportChatController extends Controller
                 'chat_id' => $chat->id,
             ]);
         }
-        $chat->touch();
         $chat->load('messages');
         return response()->json([
             'status' => true,
-            'messages' => $chat->messages,
-            'user' => $user
+            'messages' =>$chat->messages,
         ]);
     }
 }

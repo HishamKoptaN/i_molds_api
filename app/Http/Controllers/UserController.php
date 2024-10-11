@@ -1,6 +1,9 @@
 <?php
 
 namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Api\BaseControlle;
+use App\Http\Controllers\Api\Role;
 use App\Http\Controllers\Controller;
 use App\Mail\Confirmation;
 use App\Mail\Reset;
@@ -19,19 +22,17 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
 
-class UserController extends BaseController
+class UserController extends Controller
 {
-        public function uploadProfilePicture(Request $request)
+    public function uploadProfilePicture(Request $request)
     {
         $request->validate([
             'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
         $user = auth()->user();
         $path = $request->file('image')->store('profile_pictures', 'public');
-
         $user->image = $path;
-        $user->save();
-
+        // $user->save();
         return response()->json(['message' => 'Profile picture uploaded successfully', 'path' => $path], 200);
     }
 
@@ -44,37 +45,37 @@ class UserController extends BaseController
                 return response()->file($path);
             }
         }
-
         return response()->json(['message' => 'Profile picture not found'], 404);
     }
-    
-   public function updateAccountInfo(Request $request)
-    {
-        $user = Auth::user(); 
 
+    public function updateAccountInfo(Request $request)
+    {
+        $user = Auth::user();
         // Validate the request
-        $request->validate([
-            'accountInfo' => 'required|array',
-            'accountInfo.*.currency' => 'required|string',
-            'accountInfo.*.value' => 'required|numeric',
-        ]);
+        $request->validate(
+            [
+                'accountInfo' => 'required|array',
+                'accountInfo.*.currency' => 'required|string',
+                'accountInfo.*.value' => 'required|numeric',
+            ],
+        );
 
         // Update the user's account info
         $user->account_info = json_encode($request->accountInfo);
-        $user->save();
+        // $user->save();
 
         return response()->json([
             'message' => 'Account information updated successfully',
             'user' => $user,
         ], 200);
     }
-      public function index()
+    public function index()
     {
-         
-         return response()->json([
-                'status' => false,
-                'user' => User::all()
-            ]);
+
+        return response()->json([
+            'status' => false,
+            'user' => User::all()
+        ]);
     }
 
     // تخزين مستخدم جديد
@@ -136,10 +137,10 @@ class UserController extends BaseController
             'message' => __('User deleted successfully.')
         ]);
     }
-    
-    
-    
-    
+
+
+
+
     public function getEmployees()
     {
         $employees = User::where('role', 'employee')->get();
@@ -150,12 +151,12 @@ class UserController extends BaseController
         $user = User::findOrFail($request->user_id);
         $role = $request->role;
 
-        if (Role::where('name', $role)->where('guard_name', 'api')->exists()) {
-            $user->assignRole($role, 'api');
-            return response()->json(['status' => true, 'message' => 'Role added successfully']);
-        } else {
-            return response()->json(['status' => false, 'message' => 'Role does not exist']);
-        }
+        // if (Role::where('name', $role)->where('guard_name', 'api')->exists()) {
+        //     $user->assignRole($role, 'api');
+        //     return response()->json(['status' => true, 'message' => 'Role added successfully']);
+        // } else {
+        //     return response()->json(['status' => false, 'message' => 'Role does not exist']);
+        // }
     }
 
     public function checkUserRole(Request $request)
@@ -177,8 +178,8 @@ class UserController extends BaseController
 
         return response()->json(['status' => true, 'roles' => $roles]);
     }
-    
- //Resend code
+
+    //Resend code
     public function Resendcode(Request $request)
     {
         try {
@@ -188,7 +189,7 @@ class UserController extends BaseController
         } catch (Exception $e) {
             return response()->json([
                 'message' => 'Enter a valid email address',
-               'status' => false,
+                'status' => false,
             ], 400);
         }
         $user = User::where('id', auth()->id())->first();
@@ -204,7 +205,7 @@ class UserController extends BaseController
         Mail::send(new Confirmation($user));
         return response()->json([
             'message' => 'Resend code successful',
-           'status' => true,
+            'status' => true,
         ], 200);
     }
 
@@ -212,60 +213,18 @@ class UserController extends BaseController
     {
         // البحث عن المستخدم حسب معرف المستخدم
         $user = User::find($userId);
-
         // التحقق مما إذا كان المستخدم موجودًا
         if (!$user) {
             return response()->json(['message' => 'User not found'], 404);
         }
-
         // التحقق من حالة المستخدم
         $isActive = ($user->status === 'active');
-
         // إرجاع الاستجابة بحالة المستخدم
         return response()->json([
             'status' => $isActive,
         ], 200);
     }
-
     //Create nwe user
-    public function createUser(Request $request)
-    {
-        $validate = Validator::make($request->all(), [
-            'first_name' => 'required|string',
-            'last_name' => 'required|string',
-            'user_name' => 'required|string',
-            'email' => 'required|email|unique:users,email',
-            // 'phone_number' => ['required', 'unique:users,phone_number', new Phone],
-            'password' => 'required|string',
-
-        ]);
-        if ($validate->fails()) {
-            return $this->sendResponse($validate->errors()->all(), null, 400);
-        }
-        if ($request->hasFile('image')) {
-            $uploadedFileUrl = Cloudinary::upload($request->file('image')->getRealPath())->getSecurePath();
-            $data['image'] = $uploadedFileUrl;
-        }
-
-        $password = Hash::make($request->password);
-        $code = rand(000000, 999999);
-        try {
-            $user = User::create([
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'username' => $request->user_name,
-                'email' => $request->email,
-                'phone_number' => $request->phone_number,
-                'password' => $password,
-                'confirmation_code' => $code,
-            ]);
-        } catch (Exception $e) {
-            return $this->sendResponse($e->getMessage(), null, 400);
-        }
-        Notification::send($user, new NewUserNotification($user, $user->confirmation_code));
-        return $this->sendResponse('Account created successfully, proceed to login', null, 201);
-    }
-
     public function confirmEmail(Request $request)
     {
         try {
@@ -276,7 +235,7 @@ class UserController extends BaseController
 
             $user = auth()->user();
             if ($user->email !== $request->email) return $this->sendResponse('Please enter a correct email address', null, 400);
-           return $this->sendResponse('kkk', $user, 200);
+            return $this->sendResponse('kkk', $user, 200);
 
             if (!$user) {
                 return $this->sendResponse('User not found', null, 404);
@@ -288,11 +247,11 @@ class UserController extends BaseController
             $user->confirmation_code = rand(100000, 999999);
             $user->save();
 
-            Notification::send($user, new ConfirmNotification($user, $user->confirmation_code));
+            // Notification::send($user, new ConfirmNotification($user, $user->confirmation_code));
 
             return $this->sendResponse('Confirmation code sent successfully', null, 200);
         } catch (Exception $e) {
-            return $this->sendResponse($e->getMessage(), $user, 500);
+            // return $this->sendResponse($e->getMessage(), $user, 500);
         }
     }
 
@@ -305,52 +264,34 @@ class UserController extends BaseController
             return $this->sendResponse($validator->errors()->all(), null, 422);
         }
         $user = auth()->user();
-        if ($user->hasVerifiedEmail()) {
-            return $this->sendResponse('Email already verified', null, 403);
-        }
+        // if ($user->hasVerifiedEmail()) {
+        //     return $this->sendResponse('Email already verified', null, 403);
+        // }
         if ($request->code == $user->confirmation_code) {
-            if ($user->markEmailAsVerified()) {
-                event(new Verified($user));
-                try {
-                    // sendSms($user->phone_number, 'Email verified');
-                } catch (Exception $e) {
-                     return response()->json([
-                'status' => false,
-                'error' => $th->getMessage(),
-                ]);
-                }
-            }
-             return response()->json([
-                    'status' => true,
-                ]);
+            // if ($user->markEmailAsVerified()) {
+            //     event(new Verified($user));
+            //     try {
+            //         // sendSms($user->phone_number, 'Email verified');
+            //     } catch (Exception $e) {
+            //         return response()->json([
+            //             'status' => false,
+            //             'error' => $th->getMessage(),
+            //         ]);
+            //     }
+            // }
+            return response()->json([
+                'status' => true,
+            ]);
         } else {
-          return response()->json([
-                    'status' => false,
-                ]);
+            return response()->json([
+                'status' => false,
+            ]);
         }
     }
 
-  
 
-    //Logout
-    public function logout(Request $request)
-    {
-        $user = User::where('id', auth()->id())->first();
-        auth()->user()->token()->revoke();
-
-
-        return response()->json([
-            'message' => 'Logged out successfully',
-        ], 200);
-    }
 
     //Get user with token on main page
-    public function getUser(Request $request)
-    {
-        $authUser = auth()->user()->load('experience', 'education');
-
-        return $this->sendResponse('User returned successfully', $authUser, 200);
-    }
 
     public function getUserListing()
     {
@@ -360,9 +301,9 @@ class UserController extends BaseController
         return $this->sendResponse('User jobs returned successfully', $userPost, 200);
     }
 
-  
 
-   
+
+
 
     public function ResetPassword(Request $request)
     {
@@ -443,27 +384,27 @@ class UserController extends BaseController
 
     public function updateProfile(Request $request)
     {
-    $user = auth()->user();
-    $data = $request->only(['name', 'phone_number', 'image', 'cv']); // فقط الحقول المسموح بتحديثها
-    // تحديث الصورة إذا كانت موجودة في الطلب
-    if ($request->hasFile('image')) {
-        $uploadedFileUrl = Cloudinary::upload($request->file('image')->getRealPath())->getSecurePath();
-        $data['image'] = $uploadedFileUrl;
-    }
-    // تحديث السيرة الذاتية (CV) إذا كانت موجودة في الطلب
-    if ($request->hasFile('cv')) {
-        $uploadedFileUrl = Cloudinary::uploadFile($request->file('cv')->getRealPath())->getSecurePath();
-        $data['cv'] = $uploadedFileUrl;
-    }
-    // تحديث البيانات الأخرى
-    if ($request->has('name')) {
-        $data['name'] = $request->input('name');
-    }
-    if ($request->has('phone_number')) {
-        $data['phone_number'] = $request->input('phone_number');
-    }
-    $user->update($data);
-    return $this->sendResponse('Updated successfully', null, 200);
+        $user = auth()->user();
+        $data = $request->only(['name', 'phone_number', 'image', 'cv']); // فقط الحقول المسموح بتحديثها
+        // تحديث الصورة إذا كانت موجودة في الطلب
+        if ($request->hasFile('image')) {
+            // $uploadedFileUrl = Cloudinary::upload($request->file('image')->getRealPath())->getSecurePath();
+            // $data['image'] = $uploadedFileUrl;
+        }
+        // تحديث السيرة الذاتية (CV) إذا كانت موجودة في الطلب
+        if ($request->hasFile('cv')) {
+            // $uploadedFileUrl = Cloudinary::uploadFile($request->file('cv')->getRealPath())->getSecurePath();
+            // $data['cv'] = $uploadedFileUrl;
+        }
+        // تحديث البيانات الأخرى
+        if ($request->has('name')) {
+            $data['name'] = $request->input('name');
+        }
+        if ($request->has('phone_number')) {
+            $data['phone_number'] = $request->input('phone_number');
+        }
+        // $user->update($data);
+        return $this->sendResponse('Updated successfully', null, 200);
     }
 
     public function notAuth()
