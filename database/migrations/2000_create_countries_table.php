@@ -12,14 +12,15 @@ return new class extends Migration
             'countries',
             function (Blueprint $table) {
                 $table->id();
-                $table->string('name');
-                $table->string('flag');
+                $table->string('code')->unique();
                 $table->timestamps();
             },
         );
     }
     public function down(): void
     {
-        Schema::dropIfExists('countries');
+        Schema::dropIfExists(
+            'countries',
+        );
     }
 };

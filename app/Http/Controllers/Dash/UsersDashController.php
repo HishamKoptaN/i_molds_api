@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Dashboard;
+namespace App\Http\Controllers\Dash;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -10,8 +10,8 @@ use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\Permission;
 
-    class UsersDashboardController extends Controller
-    {
+class UsersDashController extends Controller
+{
     public function handleUsers(Request $request)
     {
         switch ($request->method()) {
@@ -32,14 +32,14 @@ use App\Models\Permission;
     protected function getAllUsers(Request $request)
     {
         try {
-            $users = User::all();  
+            $users = User::all();
             $usersWithPermissions = $users->map(function ($user) {
                 $user_permissions = DB::table('user_has_permissions')
                     ->join('permissions', 'user_has_permissions.permission_id', '=', 'permissions.id')
                     ->where('user_has_permissions.user_id', $user->id)
                     ->select('permissions.name', 'user_has_permissions.permission_id')
                     ->get();
-           
+
                 return [
                     'id' => $user->id,
                     'name' => $user->name,
@@ -91,7 +91,7 @@ use App\Models\Permission;
             "balance"   => $request->balance,
             "comment"   => $request->comment,
         ];
-    
+
         if ($request->status === 'active') {
             $dataToUpdate['inactivate_end_at'] = null;
         } elseif ($request->has('block_type') && $request->has('block_time')) {
@@ -107,11 +107,11 @@ use App\Models\Permission;
                 'message' => __('Permissions should be provided as a non-empty array'),
             ], 400);
         }
-    
+
         $modelType = 'App\\Models\\User';
         $userId = $user->id;
         $data = [];
-    
+
         foreach ($permissions as $permissionId) {
             $data[] = [
                 'permission_id' => $permissionId,

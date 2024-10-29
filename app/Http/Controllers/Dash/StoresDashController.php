@@ -1,22 +1,20 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Dash;
 
 use App\Http\Controllers\Controller;
-use App\Models\Category;
 use Illuminate\Http\Request;
-use App\Models\Offer;
 use App\Models\Store;
 
-class OffersApiController extends Controller
+class StoresDashController extends Controller
 {
-    public function handleOffers(
+    public function handleStores(
         Request $request,
         $id = null,
     ) {
         switch ($request->method()) {
             case 'GET':
-                return $this->getOffers($id);
+                return $this->getStores();
             case 'POST':
                 return $this->sendMessage(
                     $request,
@@ -31,21 +29,11 @@ class OffersApiController extends Controller
                 );
         }
     }
-    public function getOffers($id)
+    public function getStores()
     {
-        $offers = Offer::offersByGovernorate(
-            $id,
-        )
-            ->with('store')
-            ->get();
-        $stores = Store::byGovernorateId($id)->get();
-        $categories = Category::all();
+        $stores = Store::all();
         return response()->json(
-            [
-                "offers" => $offers,
-                "stores" => $stores,
-                "categories" => $categories,
-            ]
+            $stores,
         );
     }
 }

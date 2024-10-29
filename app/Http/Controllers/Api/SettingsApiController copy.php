@@ -4,22 +4,17 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Store;
+use App\Models\Country;
 
-class StorsApiController extends Controller
+class SettingsApiController extends Controller
 {
-    public function handleStors(
+    public function handleRequest(
         Request $request,
         $id = null,
     ) {
         switch ($request->method()) {
             case 'GET':
-                return $this->getStors();
-            case 'POST':
-                return $this->sendMessage(
-                    $request,
-                    $id,
-                );
+                return $this->getSettings();
             default:
                 return response()->json(
                     [
@@ -29,9 +24,11 @@ class StorsApiController extends Controller
                 );
         }
     }
-    public function getStors()
+    public function getSettings()
     {
-        $stors = Store::all();
-        return response()->json($stors);
+        $countries = Country::all();
+        return response()->json(
+            $countries,
+        );
     }
 }

@@ -42,7 +42,7 @@ class User extends Authenticatable implements JWTSubject
         'role'
     ];
 
- 
+
     public function accounts()
     {
         return $this->hasMany(Account::class);
@@ -52,21 +52,18 @@ class User extends Authenticatable implements JWTSubject
         return $this->belongsTo(Role::class);
     }
 
-    public function plan()
-    {
-        return $this->belongsTo(Plan::class);
-    }
-   
+
+
     public function createdDate(): Attribute
     {
         return Attribute::make(
-            get: fn (mixed $value) => $this->created_at ? $this->created_at->format('Y-m-d') : null,
+            get: fn(mixed $value) => $this->created_at ? $this->created_at->format('Y-m-d') : null,
         );
     }
     public function upgradedDate(): Attribute
     {
         return Attribute::make(
-            get: fn (mixed $value) => $this->upgraded_at ? $this->upgraded_at->format('Y-m-d H:i') : null,
+            get: fn(mixed $value) => $this->upgraded_at ? $this->upgraded_at->format('Y-m-d H:i') : null,
         );
     }
     public function refer()
@@ -76,19 +73,6 @@ class User extends Authenticatable implements JWTSubject
     public function referrals()
     {
         return $this->hasMany(User::class, 'refered_by');
-    }
-  
-    public function transfers()
-    {
-        return $this->hasMany(Transfer::class, 'user_id');
-    }
-    public function adminTransfers()
-    {
-        return $this->hasMany(Transfer::class, 'admin_id');
-    }
-    public function tasks()
-    {
-        return $this->belongsToMany(Task::class, 'user_tasks');
     }
     public function userPlan()
     {

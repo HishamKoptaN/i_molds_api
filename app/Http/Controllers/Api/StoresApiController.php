@@ -1,20 +1,20 @@
 <?php
 
-namespace App\Http\Controllers\Dash;
+namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Store;
 
-class StorsDashController extends Controller
+class StoresApiController extends Controller
 {
-    public function handleStors(
+    public function handleStores(
         Request $request,
         $id = null,
     ) {
         switch ($request->method()) {
             case 'GET':
-                return $this->getStors();
+                return $this->getStores();
             case 'POST':
                 return $this->sendMessage(
                     $request,
@@ -29,7 +29,7 @@ class StorsDashController extends Controller
                 );
         }
     }
-    public function getStors()
+    public function getStores()
     {
         $stors = Store::all();
         return response()->json($stors);

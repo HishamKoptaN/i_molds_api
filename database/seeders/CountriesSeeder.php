@@ -13,25 +13,20 @@ class CountriesSeeder extends Seeder
         DB::table('countries')->insert(
             [
                 [
-                    'name' => 'Egypt',
-                    'flag' => 'https://api.awfar-offers.com/storage/stores_images/green_hyper_market.png',
+                    'code' => 'EG',
                     'created_at' => now(),
                     'updated_at' => now(),
                 ],
                 [
-                    'name' => 'Saudia',
-                    'flag' => 'https://api.awfar-offers.com/storage/stores_images/green_hyper_market.png',
+                    'code' => 'SA',
                     'created_at' => now(),
                     'updated_at' => now(),
                 ],
                 [
-                    'name' => 'Qatar',
-                    'flag' => 'https://api.awfar-offers.com/storage/stores_images/green_hyper_market.png',
+                    'code' => 'QR',
                     'created_at' => now(),
                     'updated_at' => now(),
                 ],
-
-
             ],
         );
     }

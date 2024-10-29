@@ -1,17 +1,13 @@
 <?php
 
-namespace App\Http\Controllers\Dashboard;
+namespace App\Http\Controllers\Dash;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Permission;
-use Illuminate\Support\Facades\DB;
-use Spatie\Permission\Models\Role;
 use App\Models\User;
-use Spatie\Permission\Models\Permission as SpatiePermission;
 
-class PermissionsDashboardController extends Controller
+class PermissionsDashController extends Controller
 {
 
     public function handlePermissions(Request $request)

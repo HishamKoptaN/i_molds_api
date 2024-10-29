@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Http\Controllers\Dashboard;
+namespace App\Http\Controllers\Dash;
 
 use App\Http\Controllers\Controller;
 use App\Models\AppControllerModel;
 use Illuminate\Http\Request;
 
-class AppControllerDashboardController extends Controller
+class AppControllerDashController extends Controller
 {
     public function handleController(Request $request, $id = null)
     {

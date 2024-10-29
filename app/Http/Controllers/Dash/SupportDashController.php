@@ -1,13 +1,12 @@
 <?php
-namespace App\Http\Controllers\Dashboard;
+
+namespace App\Http\Controllers\Dash;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use App\Models\Chat;
-use App\Models\User;
 
-class SupportDashboardController extends Controller
+class SupportDashController extends Controller
 {
     public function handleSupport(Request $request)
     {
@@ -28,12 +27,12 @@ class SupportDashboardController extends Controller
     {
         $chats = Chat::with(['user:id,name,image'])
             ->withCount(['messages as unread_messages_count' => function ($query) {
-                $query->whereNull('readed_at') 
-                      ->whereColumn('messages.user_id', '=', 'chats.user_id');
+                $query->whereNull('readed_at')
+                    ->whereColumn('messages.user_id', '=', 'chats.user_id');
             }])
             ->orderBy('updated_at', 'desc')
             ->get();
-        
+
         $chats->each(function ($chat) {
             $chat->user->makeHidden(['id']);
         });
@@ -43,9 +42,11 @@ class SupportDashboardController extends Controller
                 'message' => 'No chats found',
             ], 404);
         }
-        return response()->json([
-            'status' => true,
-            'chats' => $chats
-        ]);
+        return response()->json(
+            [
+                'status' => true,
+                'chats' => $chats
+            ],
+        );
     }
 }

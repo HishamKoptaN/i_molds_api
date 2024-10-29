@@ -1,14 +1,13 @@
 <?php
-namespace App\Http\Controllers\Dashboard;
+
+namespace App\Http\Controllers\Dash;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\User;
 use App\Models\Account;
-use App\Models\Currency;
 
-class AccountsDashboardController extends Controller
+class AccountsDasController extends Controller
 {
     public function handleAccounts(Request $request)
     {
@@ -21,47 +20,38 @@ class AccountsDashboardController extends Controller
                 return response()->json(['status' => false, 'message' => 'Invalid request method']);
         }
     }
-public function getAccounts()
-{
-    try {
-        // التحقق من تسجيل دخول المستخدم
-        $user = Auth::guard('sanctum')->user();  
-        if (!$user) {
+    public function getAccounts()
+    {
+        try {
+            $user = Auth::guard('sanctum')->user();
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'error' => 'User not authenticated',
+                ], 401);
+            }
+            $accounts = Account::where('user_id', $user->id)
+                ->with(['currency:id,name'])
+                ->get()
+                ->map(function ($account) {
+                    $account->currency->makeHidden('id');
+                    return $account;
+                });
+            $user_status = $user->online_offline === 'online';
+            return response()->json([
+                'status' => true,
+                'accounts' => $accounts,
+                'user_status' => $user_status,
+            ], 200);
+        } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'error' => 'User not authenticated',
-            ], 401);
+                'error' => 'Failed to retrieve accounts: ' . $e->getMessage(),
+            ], 500);
         }
-
-        // جلب الحسابات المرتبطة بالمستخدم
-        $accounts = Account::where('user_id', $user->id)
-            ->with(['currency:id,name'])
-            ->get()
-            ->map(function ($account) {
-                $account->currency->makeHidden('id'); 
-                return $account;
-            });
-
-        // التحقق من حالة المستخدم (online أو offline)
-        $user_status = $user->online_offline === 'online';
-
-        // إذا تم الجلب بنجاح
-        return response()->json([
-            'status' => true,
-            'accounts' => $accounts,
-            'user_status' => $user_status,
-        ], 200);
-
-    } catch (\Exception $e) {
-        // التعامل مع الأخطاء الغير متوقعة
-        return response()->json([
-            'status' => false,
-            'error' => 'Failed to retrieve accounts: ' . $e->getMessage(),
-        ], 500);
     }
-}
 
-      public function updateAccountNumbers(Request $request)
+    public function updateAccountNumbers(Request $request)
     {
         try {
             $accountsData = $request->input('accounts');
