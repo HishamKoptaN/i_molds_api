@@ -5,9 +5,7 @@ namespace App\Http\Controllers\Dash;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Exception;
-
 use App\Traits\ApiResponseTrait;
-
 use App\Models\Governorate;
 
 class GovernoratesDashController extends Controller
@@ -39,7 +37,7 @@ class GovernoratesDashController extends Controller
             $governorates = Governorate::all();
             return $this->successResponse($governorates);
         } catch (\Exception $e) {
-            return $this->failureResponse(500, $e->getMessage());
+            return $this->failureResponse($e->getMessage());
         }
     }
     public function store(Request $request)

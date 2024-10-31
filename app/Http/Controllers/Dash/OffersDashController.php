@@ -3,20 +3,22 @@
 namespace App\Http\Controllers\Dash;
 
 use App\Http\Controllers\Controller;
+use App\Traits\ApiResponseTrait;
 use Illuminate\Http\Request;
 use App\Models\Offer;
 
 class OffersDashController extends Controller
 {
-    public function handleOffers(
+    use ApiResponseTrait;
+    public function handleRequest(
         Request $request,
         $id = null,
     ) {
         switch ($request->method()) {
             case 'GET':
-                return $this->getOffers();
+                return $this->get();
             case 'POST':
-                return $this->sendMessage(
+                return $this->post(
                     $request,
                     $id,
                 );
@@ -29,28 +31,38 @@ class OffersDashController extends Controller
                 );
         }
     }
-    public function getOffers()
+    public function get()
     {
-        $offers = Offer::all();
-        return response()->json($offers);
+        try {
+            $offers = Offer::all();
+            return $this->successResponse(
+                $offers,
+            );
+        } catch (\Exception $e) {
+            return $this->failureResponse(
+                $e->getMessage(),
+            );
+        }
     }
 
-    public function storeProductImage(Request $request)
+    public function post(Request $request)
     {
-        if ($request->hasFile('product_image')) {
-            $request->validate(
+        try {
+            $imageName = time() . '.' . $request->file('image')->getClientOriginalExtension();
+            $request->file('image')->move(
+                public_path('storage/offers'),
+                $imageName,
+            );
+            $url = asset('storage/stores/' . $imageName);
+            Offer::create(
                 [
-                    'product_image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+                    'name' => $request->name,
+                    'image' => $url,
                 ],
             );
-            $imageName = time() . '.' . $request->file('product_image')->getClientOriginalExtension();
-            $request->file('product_image')->move(public_path('storage/products'), $imageName);
-            $url = asset('storage/products/' . $imageName);
-            return response()->json(['message' => 'Image uploaded successfully', 'image_url' => $url]);
+            return $this->successResponse([], 200);
+        } catch (\Exception $e) {
+            return $this->failureResponse($e->getMessage(), 500);
         }
-        return response()->json(
-            ['message' => 'No image uploaded'],
-            400,
-        );
     }
 }

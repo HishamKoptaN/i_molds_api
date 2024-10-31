@@ -4,23 +4,35 @@ namespace App\Http\Controllers\Dash;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Traits\ApiResponseTrait;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Category;
 
 class CategoriesDashController extends Controller
 {
-    public function handleCategories(Request $request)
-    {
+    use ApiResponseTrait;
+    public function handleRequest(
+        Request $request,
+        $id = null,
+    ) {
         switch ($request->method()) {
             case 'GET':
-                return $this->getCategories($request);
+                return $this->get(
+                    $request,
+                );
             case 'POST':
-                return $this->addCategory($request);
+                return $this->post(
+                    $request,
+                );
             case 'PUT':
-                return $this->updateCategory($request);
+                return $this->put(
+                    $request,
+                );
             case 'DELETE':
-                return $this->deleteCategory($request);
+                return $this->delete(
+                    $id,
+                );
             default:
                 return response()->json(
                     [
@@ -30,43 +42,32 @@ class CategoriesDashController extends Controller
                 );
         }
     }
-    public function getCategories(Request $request)
+    public function get(Request $request)
     {
-        $categories = Category::all();
-        return response()->json(
-            $categories,
-        );
-    }
-    public function addCategory(Request $request)
-    {
-        $validatedData = $request->validate(
-            [
-                'name' => 'required|string|max:255',
-            ],
-        );
-
-        if ($request->hasFile('flag')) {
-            $flag = $request->file('flag');
-            $flagName = strtolower(Str::random(10)) . '-' . str_replace(
-                [' ', '_'],
-                '-',
-                $flag->getClientOriginalName(),
+        try {
+            $categories = Category::all();
+            return $this->successResponse(
+                $categories,
             );
-            $flagPath = $flag->storeAs('public/flags', $flagName);
+        } catch (\Exception $e) {
+            return $this->failureResponse(
+                $e->getMessage(),
+            );
         }
-
-        $categories = Category::create(
-            [
-                'name' => $validatedData['name'],
-            ],
-        );
-        return response()->json(
-            [
-                'message' => 'Category added successfully',
-                'categories' => $categories,
-            ],
-        );
     }
-    public function updateCategory(Request $request) {}
-    public function deleteCategory(Request $request) {}
+    public function post(Request $request)
+    {
+        try {
+            Category::create(
+                [
+                    'name' => $request->name,
+                ],
+            );
+            return $this->successResponse([], 200);
+        } catch (\Exception $e) {
+            return $this->failureResponse($e->getMessage(), 500);
+        }
+    }
+    public function put(Request $request) {}
+    public function delete(Request $request) {}
 }

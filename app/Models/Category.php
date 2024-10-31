@@ -11,7 +11,6 @@ class Category extends Model
     protected $table = 'categories';
     protected $fillable = [
         'name',
-        'flag',
     ];
     public static function withOffers()
     {
@@ -23,5 +22,9 @@ class Category extends Model
             Offer::class,
             'category_id',
         );
+    }
+    public function offersCount()
+    {
+        return $this->offers()->count();
     }
 }

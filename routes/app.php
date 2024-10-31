@@ -31,7 +31,7 @@ Route::any(
     '/offers/{id?}',
     [
         OffersApiController::class,
-        'handleOffers'
+        'handleRequest'
     ],
 );
 Route::get(

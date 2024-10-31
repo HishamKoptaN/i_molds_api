@@ -38,7 +38,7 @@ class CountriesDashController extends Controller
             $countries = Country::all();
             return $this->successResponse($countries);
         } catch (\Exception $e) {
-            return $this->failureResponse(500, $e->getMessage());
+            return $this->failureResponse($e->getMessage());
         }
     }
 

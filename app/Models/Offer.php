@@ -28,12 +28,15 @@ class Offer extends Model
     {
         return $this->belongsTo(Store::class);
     }
-    public function scopeOffersByGovernorate($query, $governorateId)
+    public function scopeByGovernorateId($query, $governorateId)
     {
         return $query->whereHas(
             'store',
             function ($query) use ($governorateId) {
-                $query->where('governorate_id', $governorateId);
+                $query->where(
+                    'governorate_id',
+                    $governorateId,
+                );
             },
         );
     }
