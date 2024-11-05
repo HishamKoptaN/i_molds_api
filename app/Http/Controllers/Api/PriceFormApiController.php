@@ -1,37 +1,58 @@
 <?php
 
-namespace App\Http\Controllers\Dash;
+namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+use App\Traits\ApiResponseTrait;
+use App\Models\PriceForm;
 
-class UsersDashController extends Controller
+class PriceFormApiController extends Controller
 {
+    use ApiResponseTrait;
     public function handleRequest(
         Request $request,
         $id = null,
     ) {
         switch ($request->method()) {
             case 'POST':
-                return $this->store($request, $id);
+                return $this->post($request, $id);
             case 'GET':
-                return $this->index();
+                return $this->get();
             case 'PUT':
-                return $this->update($request, $id);
+                return $this->put($request, $id);
             case 'DELETE':
                 return $this->destroy($id);
-            default:
-                return response()->json(
-                    [
-                        'status' => 'error',
-                        'message' => 'Method not allowed',
-                    ],
-                    405,
-                );
         }
     }
-    public function store(
+
+    public function get()
+    {
+        try {
+            $user = Auth::guard('sanctum')->user();
+            if (!$user) {
+                return $this->failureResponse(
+                    'User not authenticated',
+                    401,
+                );
+            }
+            $priceForms = PriceForm::where("user_id", $user->id)->get();
+            if ($priceForms->isEmpty()) {
+                return $this->failureResponse(
+                    'No Price Forms found for the user',
+                    404,
+                );
+            } else {
+                return $this->successResponse(
+                    $priceForms,
+                );
+            }
+        } catch (\Exception $e) {
+            return $this->failureResponse($e->getMessage());
+        }
+    }
+    public function post(
         Request $request,
         $user_id,
     ) {
@@ -40,7 +61,7 @@ class UsersDashController extends Controller
                 'url' => 'nullable|url',
             ]
         );
-        $priceForm = User::create(
+        $priceForm = PriceForm::create(
             [
                 'url' => $request->url,
                 'user_id' => $user_id,
@@ -55,21 +76,11 @@ class UsersDashController extends Controller
             ]
         );
     }
-    public function index()
-    {
-        $users = User::pluck('id')->map(
-            function ($id) {
-                return ['id' => $id];
-            },
-        );
-        return response()->json($users);
-    }
-
 
 
     public function update(Request $request, $id)
     {
-        $priceForm = User::findOrFail($id);
+        $priceForm = PriceForm::findOrFail($id);
 
         $request->validate(
             [
@@ -77,7 +88,9 @@ class UsersDashController extends Controller
                 'user_id' => 'required|exists:users,id'
             ],
         );
+
         $priceForm->update($request->all());
+
         return response()->json(
             [
                 'status' => 'success',
@@ -88,7 +101,7 @@ class UsersDashController extends Controller
     }
     public function destroy($id)
     {
-        $priceForm = User::findOrFail($id);
+        $priceForm = PriceForm::findOrFail($id);
         $priceForm->delete();
         return response()->json(
             [

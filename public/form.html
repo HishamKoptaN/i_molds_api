@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offers form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #e5e5e5;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .form-container {
+            background-color: white;
+            padding: 20px 25px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+            width: 720px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        label {
+            font-weight: bold;
+            color: #333;
+        }
+
+        input, select {
+            width: 97%;
+            padding: 10px;
+            margin: 10px 0 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #28a745;
+            border: none;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+    </style>
+    <script>
+        let selectedUserId = null; // To store the selected user_id
+        let selectedEntryId = null; // To store the selected entry_id
+
+        // Step 1: Fetch user IDs (only the 'id' field)
+        async function fetchUserIds() {
+            try {
+                const response = await fetch('https://app.i-molds.com/dash/users');
+                const users = await response.json();
+                
+                // Extract only 'id' from each user
+                const userIds = users.map(user => user.id);
+                return userIds;
+            } catch (error) {
+                console.error('Error fetching user IDs:', error);
+                alert('Error fetching user IDs');
+            }
+        }
+
+        // Step 2: Fetch user data for multiple user IDs in parallel using Promise.all
+        async function fetchUserDataParallel(userIds) {
+            try {
+                // Create an array of fetch promises for all user IDs
+                const fetchPromises = userIds.map(userId =>
+                    fetch(`https://i-molds.com.tr/?rest_route=/entry/v1/clients&user_id=${userId}`).then(response => response.json())
+                );
+                
+                // Wait for all promises to resolve
+                const userDataArray = await Promise.all(fetchPromises);
+                
+                return userDataArray; // Return an array of all user data responses
+            } catch (error) {
+                console.error('Error fetching user data in parallel:', error);
+            }
+        }
+
+        // Step 3: Populate dropdown with client names
+        function populateDropdown(clientDataArray) {
+            const clientSelect = document.getElementById('clientDropdown');
+            clientSelect.innerHTML = ''; // Clear previous options
+
+            clientDataArray.forEach(clientData => {
+                // Only add valid clients with entry_id and client name
+                if (clientData.entry_id && clientData.client && clientData.user_id) {
+                    const option = document.createElement('option');
+                    option.value = clientData.user_id;
+                    option.textContent = clientData.client;
+                    clientSelect.appendChild(option);
+
+                    // Store the entry_id and user_id for later use (the last valid client)
+                    selectedUserId = clientData.user_id;
+                    selectedEntryId = clientData.entry_id;
+                }
+            });
+        }
+
+        // Step 4: Handle selection and send POST request
+        async function handleSelection() {
+            const inputUrl = document.getElementById('inputUrl').value;
+            const offerNum = document.getElementById('offerNum').value;
+            const offerDate = document.getElementById('offerDate').value;
+
+            if (!inputUrl || !offerNum || !offerDate) {
+                alert('Please fill all the fields');
+                return;
+            }
+
+            // Append the selectedEntryId, offer_num, and offer_date to the input URL
+            const updatedUrl = inputUrl + `&entry_id=${selectedEntryId}&offer_num=${offerNum}&offer_date=${offerDate}`;
+
+            const postData = {
+                url: updatedUrl
+            };
+
+            try {
+                const response = await fetch(`https://app.i-molds.com/dash/price-form/${selectedUserId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(postData)
+                });
+                const result = await response.json();
+                console.log('Offer sent successfully: ' + JSON.stringify(result))
+                alert('Offer sent successfully!');
+            } catch (error) {
+                console.error('Error sending data:', error);
+                alert('Error sending data');
+            }
+        }
+
+        // Main function to load user IDs and initialize the page
+        async function init() {
+            const userIds = await fetchUserIds();
+            if (userIds && userIds.length > 0) {
+                // Fetch user data for all user IDs in parallel
+                const userDataArray = await fetchUserDataParallel(userIds);
+
+                // Filter and populate the dropdown with valid client data
+                if (userDataArray && userDataArray.length > 0) {
+                    populateDropdown(userDataArray);
+                }
+            }
+        }
+
+        window.onload = init;
+    </script>
+</head>
+<body>
+    <div class="form-container">
+        
+        <h1>حدد زبون لإرسال عرض سعر</h1>
+
+        <div class="form-group" style="width:200px">
+            <label for="clientDropdown">Select Client:</label>
+            <select id="clientDropdown">
+                <option value="">Select a client</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="offerNum">Offer Number:</label>
+            <input type="text" id="offerNum" placeholder="Enter offer number">
+        </div>
+
+        <div class="form-group">
+            <label for="offerDate">Offer Date:</label>
+            <input type="date" id="offerDate">
+        </div>
+
+        <div class="form-group">
+            <label for="inputUrl">Enter URL:</label>
+            <input type="text" id="inputUrl" placeholder="https://example.com/?page=4">
+        </div>
+
+        <button onclick="handleSelection()">Submit</button>
+    </div>
+</body>
+</html>

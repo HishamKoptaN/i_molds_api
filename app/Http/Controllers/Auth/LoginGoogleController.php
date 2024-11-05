@@ -12,20 +12,24 @@ use Illuminate\Support\Facades\Validator;
 
 class LoginGoogleController extends Controller
 {
-
     public function googleLogin(Request $request)
     {
         $create_password = false;
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'name' => 'required|string'
-        ]);
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'email' => 'required|email',
+                'name' => 'required|string'
+            ],
+        );
 
         if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'error' => $validator->errors()->first()
-            ]);
+            return response()->json(
+                [
+                    'status' => false,
+                    'error' => $validator->errors()->first()
+                ],
+            );
         }
 
         $user = User::where('email', $request->email)->first();
@@ -53,22 +57,8 @@ class LoginGoogleController extends Controller
                 'refered_by' => null,
                 'plan_id' => 1,
             ]);
-
-            $currencies = Currency::get();
-            $account_info = [];
-
-            foreach ($currencies as $currency) {
-                $account_info[] = [
-                    'currency' => $currency->name,
-                    'value' => "",
-                ];
-            }
-
-            $user->account_info = $account_info;
             $user->save();
-
             $user->markEmailAsVerified();
-
             $user->assignRole('Member');
         }
 

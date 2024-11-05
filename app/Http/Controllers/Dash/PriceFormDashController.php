@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Dash;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\User;
+use App\Traits\ApiResponseTrait;
+use App\Models\PriceForm;
 
-class UsersDashController extends Controller
+class PriceFormDashController extends Controller
 {
+    use ApiResponseTrait;
     public function handleRequest(
         Request $request,
         $id = null,
@@ -20,15 +22,19 @@ class UsersDashController extends Controller
             case 'PUT':
                 return $this->update($request, $id);
             case 'DELETE':
-                return $this->destroy($id);
+                return $this->delete($id);
             default:
-                return response()->json(
-                    [
-                        'status' => 'error',
-                        'message' => 'Method not allowed',
-                    ],
-                    405,
-                );
+                return response()->json(['status' => 'error', 'message' => 'Method not allowed'], 405);
+        }
+    }
+
+    public function get()
+    {
+        $governorates = [];
+        try {
+            return $this->successResponse($governorates);
+        } catch (\Exception $e) {
+            return $this->failureResponse(500, $e->getMessage());
         }
     }
     public function store(
@@ -40,7 +46,7 @@ class UsersDashController extends Controller
                 'url' => 'nullable|url',
             ]
         );
-        $priceForm = User::create(
+        $priceForm = PriceForm::create(
             [
                 'url' => $request->url,
                 'user_id' => $user_id,
@@ -55,21 +61,19 @@ class UsersDashController extends Controller
             ]
         );
     }
+
     public function index()
     {
-        $users = User::pluck('id')->map(
-            function ($id) {
-                return ['id' => $id];
-            },
-        );
-        return response()->json($users);
+        $priceForms = PriceForm::all();
+        return response()->json($priceForms);
     }
-
-
-
-    public function update(Request $request, $id)
-    {
-        $priceForm = User::findOrFail($id);
+    public function update(
+        Request $request,
+        $id,
+    ) {
+        $priceForm = PriceForm::findOrFail(
+            $id,
+        );
 
         $request->validate(
             [
@@ -77,7 +81,11 @@ class UsersDashController extends Controller
                 'user_id' => 'required|exists:users,id'
             ],
         );
-        $priceForm->update($request->all());
+
+        $priceForm->update(
+            $request->all(),
+        );
+
         return response()->json(
             [
                 'status' => 'success',
@@ -86,15 +94,23 @@ class UsersDashController extends Controller
             ],
         );
     }
-    public function destroy($id)
-    {
-        $priceForm = User::findOrFail($id);
-        $priceForm->delete();
-        return response()->json(
-            [
-                'status' => 'success',
-                'message' => 'Price form deleted successfully!'
-            ],
-        );
+    public function delete(
+        $id,
+    ) {
+        try {
+            $priceForm = PriceForm::findOrFail(
+                $id,
+            );
+            $priceForm->delete();
+            return $this->successResponse(
+                [],
+                200,
+            );
+        } catch (\Exception $e) {
+            return $this->failureResponse(
+                500,
+                $e->getMessage(),
+            );
+        }
     }
 }

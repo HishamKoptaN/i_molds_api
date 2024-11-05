@@ -11,32 +11,43 @@ class ChangePasswordController extends Controller
 {
     public function changePassword(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'currentPassword' => 'required',
-            'newPassword' => 'required|max:200|string|confirmed',
-        ]);
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'current_password' => 'required',
+                'new_password' => 'required|max:200|string|confirmed',
+            ],
+        );
 
         if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'error' => $validator->errors()->first()
-            ]);
+            return response()->json(
+                [
+                    'status' => false,
+                    'error' => $validator->errors()->first()
+                ],
+            );
         }
 
         if (!Hash::check($request->currentPassword, $request->user()->password)) {
-            return response()->json([
-                'status' => false,
-                'error' => __('Current password is not valid')
-            ]);
+            return response()->json(
+                [
+                    'status' => false,
+                    'error' => __('Current password is not valid')
+                ],
+            );
         }
 
-        $request->user()->update([
-            'password' => Hash::make($request->newPassword)
-        ]);
+        $request->user()->update(
+            [
+                'password' => Hash::make($request->newPassword)
+            ],
+        );
 
-        return response()->json([
-            'status' => true,
-            'user' => $request->user()
-        ]);
+        return response()->json(
+            [
+                'status' => true,
+                'user' => $request->user()
+            ],
+        );
     }
 }

@@ -1,11 +1,22 @@
 <?php
 return [
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => ['*'],
+
+    // السماح بجميع طرق الطلبات
     'allowed_methods' => ['*'],
+
+    // السماح لجميع النطاقات
     'allowed_origins' => ['*'],
-    'allowed_origins_patterns' => [],
+
+    // السماح بجميع الرؤوس
     'allowed_headers' => ['*'],
+
+    // عدم وضع قيود على الرؤوس المكشوفة
     'exposed_headers' => [],
+
+    // مدة الصلاحية للطلب قبل إعادة الإرسال
     'max_age' => 0,
-    'supports_credentials' => false,
+
+    // السماح بدعم ملفات تعريف الارتباط
+    'supports_credentials' => true,
 ];

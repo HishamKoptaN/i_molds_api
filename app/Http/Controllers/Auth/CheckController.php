@@ -15,9 +15,12 @@ class CheckController extends Controller
             ], 401);
         }
         $user = Auth::guard('sanctum')->user();
-        return response()->json([
-            'status' => true,
-            'user' => $user
-        ], 200);
+        return response()->json(
+            [
+                'status' => true,
+                'user' => $user
+            ],
+            200,
+        );
     }
 }

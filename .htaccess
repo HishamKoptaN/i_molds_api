@@ -1,0 +1,13 @@
+DirectoryIndex index.php
+
+IndexIgnore *
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteBase /
+RewriteCond %{HTTP_HOST} ^www\.(.*)$ [NC]
+RewriteRule ^(.*)$ https://%1/$1 [R=301,L]
+
+    RewriteRule    ^$    public/     [L]
+    RewriteRule    (.*) public/$1    [L]
+</IfModule>
