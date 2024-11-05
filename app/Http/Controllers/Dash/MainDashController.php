@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Dashboard;
+namespace App\Http\Controllers\Dash;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -10,16 +10,16 @@ use Spatie\Permission\Models\Permission as SpatiePermission;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 
-class MainDashboardController extends Controller
+class MainDashController extends Controller
 {
     public function handleMain(Request $request)
     {
         switch ($request->method()) {
-              case 'GET':
+            case 'GET':
                 return $this->getUserPermissions($request);
             case 'POST':
                 return $this->uploadFile($request);
-          
+
             case 'PUT':
                 return $this->updateFile($request);
             case 'DELETE':

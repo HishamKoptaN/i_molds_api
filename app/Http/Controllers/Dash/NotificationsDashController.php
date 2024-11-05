@@ -1,11 +1,12 @@
 <?php
-namespace App\Http\Controllers\Dashboard;
+
+namespace App\Http\Controllers\Dash;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Notification;
 
-class NotificationsDashboardController extends Controller
+class NotificationsDashController extends Controller
 {
     public function handleNotifications(Request $request)
     {
@@ -28,23 +29,21 @@ class NotificationsDashboardController extends Controller
         $notifications = Notification::orderBy('created_at', 'desc')->get();
         return response()->json(['status' => true, 'notifications' => $notifications]);
     }
-    
+
     public function createNotification(Request $request)
     {
         $notificationData = [
             'type' => $request->input('type', 'public'),
-            'message' =>$request->message,
+            'message' => $request->message,
             'notifiable_id' => json_encode($request->input('notifiable_id', [])),
             'created_at' => now(),
             'updated_at' => now(),
         ];
-    
+
         $notification = Notification::create($notificationData);
-    
+
         return response()->json([
             'status' => true,
         ], 200);
     }
-
 }
-

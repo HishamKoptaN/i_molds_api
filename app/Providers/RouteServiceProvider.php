@@ -15,9 +15,13 @@ class RouteServiceProvider extends ServiceProvider
     public function boot()
     {
         parent::boot();
+        parent::boot();
         RateLimiter::for(
             'api',
             function (Request $request) {
+                return Limit::perMinute(120)->by(
+                    $request->user()?->id ?: $request->ip(),
+                );
                 return Limit::perMinute(120)->by(
                     $request->user()?->id ?: $request->ip(),
                 );

@@ -13,7 +13,7 @@ class DatabaseSeeder extends Seeder
             [
                 CountriesSeeder::class,
                 GovernoratesSeeder::class,
-                StorsSeeder::class,
+                StoresSeeder::class,
                 CategoriesSeeder::class,
                 OffersSeeder::class,
                 // NotificationsSeeder::class,

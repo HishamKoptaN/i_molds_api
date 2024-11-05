@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Http\Controllers\Dashboard;
+namespace App\Http\Controllers\Dash;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 
-class ProfileDashboardController extends Controller
+class ProfileDashController extends Controller
 {
-     public function handleProfile(Request $request)
+    public function handleProfile(Request $request)
     {
         switch ($request->method()) {
             case 'GET':
@@ -35,7 +35,7 @@ class ProfileDashboardController extends Controller
                 'message' => 'User not authenticated',
             ], 401);
         }
-    
+
         $user_status = $user->online_offline === '1';
         return response()->json([
             'status' => true,
@@ -52,7 +52,7 @@ class ProfileDashboardController extends Controller
         }
         $currentStatus = $user->online_offline;
         $user->online_offline = $currentStatus === 'online' ? 'offline' : 'online';
-        $user->save();
+        // $user->save();
         return response()->json([
             'status' => true,
             'new_status' => $user->online_offline,
